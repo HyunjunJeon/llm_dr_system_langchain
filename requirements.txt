@@ -1,0 +1,8 @@
+langchain
+langchainhub
+openai
+bardapi
+tiktoken
+streamlit
+uvicorn[standard]
+python-dotenv

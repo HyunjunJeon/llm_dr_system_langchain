@@ -1,0 +1,7 @@
+.idea
+.env.bard
+.env.langchain
+.env.openai
+__pycache__
+.python-version
+requirements-local.txt
