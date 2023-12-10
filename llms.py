@@ -17,11 +17,11 @@ class BardLLM(LLM):
         return "Bard_PALM2_20231207"
 
     def _call(
-            self,
-            prompt: str,
-            stop: Optional[List[str]] = None,
-            run_manager: Optional[CallbackManagerForLLMRun] = None,
-            **kwargs
+        self,
+        prompt: str,
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[CallbackManagerForLLMRun] = None,
+        **kwargs
     ) -> str:
         response = Bard(
             timeout=60,
@@ -45,10 +45,10 @@ def get_bard() -> BardLLM:
 
 
 def get_openai(
-        temperature: float = 0.1,
-        model_name: str = "gpt-3.5-turbo-1106",
-        streaming: bool = False,
-        callbacks: List[BaseCallbackHandler] = [],
+    temperature: float = 0.1,
+    model_name: str = "gpt-3.5-turbo-1106",
+    streaming: bool = False,
+    callbacks: List[BaseCallbackHandler] = [],
 ) -> ChatOpenAI:
     return ChatOpenAI(
         temperature=temperature,

@@ -3,15 +3,16 @@ import os
 import streamlit as st
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.output_parsers import StrOutputParser
+from langchain.llms.base import LLM
 
 from llms import get_openai, get_bard
 from load_env import load_multi_dotenv
 from llm_health_check import openai_health_check, bard_health_check
-from prompts import base_bard_prompt, base_gpt35_prompt, base_gpt4_prompt
+from prompts import base_bard_chain, base_gpt35_chain, base_gpt4_chain
 
 
-# OpenAI Streamlit Chat Handling (Bard X)
-class ChatMessageCallbackHandler(BaseCallbackHandler):
+# OpenAI Chat Streaming Handling (Bard X)
+class OpenAIChatMessageCallbackHandler(BaseCallbackHandler):
     message = ""
     message_box = None
 
@@ -26,6 +27,7 @@ class ChatMessageCallbackHandler(BaseCallbackHandler):
         self.message_box.markdown(self.message)
 
 
+# 메시지 저장(History 에 사용 가능)
 def save_message(content: str, role: str, llm_type: str = ""):
     st.session_state["messages"].append(
         {
@@ -36,6 +38,7 @@ def save_message(content: str, role: str, llm_type: str = ""):
     )
 
 
+# 채팅 History 를 화면에 출력
 def get_chat_history():
     for message in st.session_state["messages"]:
         with st.chat_message(message["role"]):
@@ -56,13 +59,13 @@ def streamlit_init():
     )
 
     st.title(
-        "DevFest 2023 Song-do 😎 Langchain based LLM DR system with OpenAI GPT and Google Bard"
+        "DevFest 2023 Song-do 😎 Langchain based LLM DR system with OpenAI GPT and Google Bard(PaLM2)"
     )
 
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
 
-    # 매번 헬스체크를 할 필요는....
+    # 매 요청마다 헬스 체크를 할 필요는 없으니, 캐싱해두는게..
     # if "bard_status" not in st.session_state:
     #     st.session_state["bard_status"] = bard_health_check()
     #
@@ -80,20 +83,21 @@ def streamlit_init():
     get_chat_history()
 
 
-def get_llm(llm_type: str):
+# Langchain LLM 을 가져오는 함수
+def get_llm(llm_type: str) -> LLM:
     return {
         "bard": get_bard(),
         "gpt35_turbo": get_openai(
             temperature=float(os.getenv("MODEL_TEMPERATURE")),
             model_name=os.getenv("GPT35_TURBO_MODEL"),
             streaming=True,
-            callbacks=[ChatMessageCallbackHandler()],
+            callbacks=[OpenAIChatMessageCallbackHandler()],
         ),
         "gpt4_turbo": get_openai(
             temperature=float(os.getenv("MODEL_TEMPERATURE")),
             model_name=os.getenv("GPT4_TURBO_MODEL"),
             streaming=True,
-            callbacks=[ChatMessageCallbackHandler()],
+            callbacks=[OpenAIChatMessageCallbackHandler()],
         ),
     }[llm_type]
 
@@ -111,7 +115,7 @@ def chatbot_main():
                 message_placeholder = st.empty()
                 # if st.session_state["bard_status"]:
                 if bard_health_check():
-                    bard_chain = base_bard_prompt | get_llm("bard") | StrOutputParser()
+                    bard_chain = base_bard_chain | get_llm("bard") | StrOutputParser()
                     response = bard_chain.invoke(message)
                     message_placeholder.markdown(response)
                     save_message(response, "ai", "bard")
@@ -119,11 +123,11 @@ def chatbot_main():
             if message.startswith("#gpt4"):
                 message = message.replace("#gpt4", "")
                 with st.chat_message("ai"):
-                    gpt4_chain = base_gpt4_prompt | get_llm("gpt4_turbo")
+                    gpt4_chain = base_gpt4_chain | get_llm("gpt4_turbo")
                     gpt4_chain.invoke(message)
             else:
                 with st.chat_message("ai"):
-                    gpt35_chain = base_gpt35_prompt | get_llm("gpt35_turbo")
+                    gpt35_chain = base_gpt35_chain | get_llm("gpt35_turbo")
                     gpt35_chain.invoke(message)
 
 

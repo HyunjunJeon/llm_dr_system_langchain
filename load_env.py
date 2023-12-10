@@ -12,9 +12,17 @@ OPENAI_ENV = os.path.join(SECRETS_DIR, ".env.openai")
 
 
 def load_bard_env() -> None:
+    """
+    Bard .env 를 로드
+    :return:
+    """
     load_dotenv(dotenv_path=BARD_ENV)
 
 
 def load_multi_dotenv() -> None:
+    """
+    Multiple .env 를 로드
+    :return:
+    """
     load_dotenv(dotenv_path=LANGCHAIN_ENV)
     load_dotenv(dotenv_path=OPENAI_ENV)
